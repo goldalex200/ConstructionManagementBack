@@ -101,6 +101,7 @@ class WorkSerializer(serializers.ModelSerializer):
     facility_name = serializers.CharField(source='facility.name', read_only=True)
     phone_number = serializers.CharField(source='contractor.phone_number', read_only=True)
     classification_display = serializers.CharField(source='get_classification_display', read_only=True)
+    days_in_work = serializers.FloatField(read_only=True)
 
     class Meta:
         model = Work

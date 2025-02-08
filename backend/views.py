@@ -23,7 +23,31 @@ class WorkViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = Work.objects.all()
+        # queryset = Work.objects.all()
+
+        # # Get filter parameters
+        # work_status = self.request.query_params.get('work_status', None)
+        # item_status = self.request.query_params.get('item_status', None)
+        #
+        # if work_status:
+        #     queryset = queryset.filter(status=work_status)
+        #
+        # if item_status:
+        #     queryset = queryset.filter(items__status=item_status).distinct()
+        #
+
+        queryset = Work.objects.prefetch_related('items').all()
+
+        # Get filter parameters
+        work_status = self.request.query_params.get('work_status', '')
+        item_status = self.request.query_params.get('item_status', '')
+
+        # Apply status filters only if the  y are not empty strings
+        if work_status and work_status != '':
+            queryset = queryset.filter(status=work_status)
+
+        if item_status and item_status != '':
+            queryset = queryset.filter(items__status=item_status).distinct()
 
         # Filter based on user role
         if user.role in ['CONTRACTOR', 'CONTRACTOR_VIEWER']:
@@ -190,8 +214,8 @@ class WorkViewSet(viewsets.ModelViewSet):
         elif report_type == 'time':
             now = timezone.now()
             return Response({
-                'delayed': queryset.filter(due_end_date__lt=now, status__in=['IN_PROGRESS', 'APPROVED']).count(),
-                'in_time': queryset.filter(due_end_date__gte=now, status__in=['IN_PROGRESS', 'APPROVED']).count(),
+                'delayed': queryset.filter(due_end_date__lt=now, status__in=['IN_PROGRESS', 'PENDING']).count(),
+                'in_time': queryset.filter(due_end_date__gte=now, status__in=['IN_PROGRESS', 'PENDING']).count(),
             })
 
         elif report_type == 'contractors':

@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.validators import EmailValidator
+from django.utils import timezone
 
 
 class User(AbstractUser):
@@ -81,6 +82,11 @@ class Work(models.Model):
     time_score = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(10)], null=True, blank=True)
     cost_score = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(10)], null=True, blank=True)
 
+    completion_percentage = models.IntegerField(
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        default=0
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -92,6 +98,11 @@ class Work(models.Model):
             return round(sum(valid_scores) / len(valid_scores), 1)
         return 0
 
+    @property
+    def days_in_work(self):
+        if self.end_date:
+            return (self.end_date - self.start_date).days + 1
+        return (timezone.now() - self.start_date).days + 1
 
 class WorkItem(models.Model):
     # STATUS_CHOICES = (
